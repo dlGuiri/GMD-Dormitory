@@ -10,19 +10,19 @@ function closeModal(modalId) {
 }
 
 // Function to get the active apartment name
-function getCurrentApartment() {
-  const slides = document.querySelectorAll(".mySlides");
-  const apartmentNames = ["Sesame Apartment", "Matina Apartment", "Nabua Apartment"];
-  let activeIndex = -1;
-
-  slides.forEach((slide, index) => {
-      if (slide.classList.contains("active")) {
-          activeIndex = index;
-      }
-  });
-
-  return activeIndex !== -1 ? apartmentNames[activeIndex] : null;
-}
+function getActiveApartment() {
+    // Find all slides
+    let slides = document.getElementsByClassName('mySlides');
+    
+    // Loop through slides to find the active one
+    for (let slide of slides) {
+        if (slide.style.display === 'block') { // Check if the slide is visible
+            let textElement = slide.querySelector('.text'); // Find the text inside the active slide
+            return textElement ? textElement.innerText.trim() : '';
+        }
+    }
+    return ''; // Return empty if no active slide is found
+  }
 // End of Function to get the active apartment name
 
 
@@ -359,20 +359,14 @@ function showSlides(n) {
   let dots = document.getElementsByClassName("dot");
   if (n > slides.length) {slideIndex = 1}
   if (n < 1) {slideIndex = slides.length}
-  
   for (i = 0; i < slides.length; i++) {
     slides[i].style.display = "none";
-    slides[i].classList.remove("active");  // Remove "active" from all slides
   }
-  
   for (i = 0; i < dots.length; i++) {
     dots[i].className = dots[i].className.replace(" active", "");
   }
-  
-  slides[slideIndex - 1].style.display = "block";
-  slides[slideIndex - 1].classList.add("active"); // Mark the current slide as "active"
-  dots[slideIndex - 1].className += " active";
+  slides[slideIndex-1].style.display = "block";
+  dots[slideIndex-1].className += " active";
 }
-
 /**  ----------------------     END OF IMAGE SLIDERS    ----------------------     **/
 
