@@ -45,7 +45,7 @@
             <!-- Placeholder sa -->
             <button class="btn" id="addTenantButton"><img src="images\add-tenant.png" alt="Icon" class="btn-icon"><br>Add Tenant</button>
             <button class="btn"><img src="images\remove-tenant.png" alt="Icon" class="btn-icon"><br>Remove Tenant</button>
-            <button class="btn"><img src="images\edit-tenant.png" alt="Icon" class="btn-icon" class="middle-button"><br>Edit Tenant</button>
+            <button class="btn" id="editTenantButton"><img src="images\edit-tenant.png" alt="Icon" class="btn-icon" class="middle-button"><br>Edit Tenant</button>
             <button class="btn" id="roomsButton"><img src="images\room.png" alt="Icon" class="btn-icon"><br>Rooms</button>
             <button class="btn"><img src="images\payment.png" alt="Icon" class="btn-icon"><br>Payment</button>
         </nav>
@@ -111,12 +111,12 @@
                   </div>
 
                   <!-- FOR : rooms -->
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <label for="roomId">Room ID:</label>
-                        <select id="roomId" required> <!-- So rooms selected rooms will drop down -->
+                        <select id="roomId"> 
                             <option value="">Select a Room</option>
                         </select>
-                    </div>
+                    </div> -->
                     <button type="submit">Add Tenant</button>
                 </form>
             </div>
@@ -140,7 +140,26 @@
         <!-- End of Remove Tenant Modal -->
 
         <!-- Edit Tenant Modal -->
-
+        <div id="editTenantModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Edit Tenant</h2>
+                <form id="editTenantForm">
+                    <div class="form-group">
+                        <label for="personId">Person ID:</label>
+                        <input type="number" id="personId" required>
+                        <p id="name-tenant">Name: </p>
+                        <label for="contactId">Contact:</label>
+                        <input type="number" id="contactId" required>
+                        <label for="moveInDateId">Move In Date:</label>
+                        <input type="date" id="moveInDateId" required>
+                        <label for="moveOutDateId">Move Out Date:</label>
+                        <input type="date" id="moveOutDateId" required>
+                    </div>
+                    <button type="submit">Edit Tenant</button>
+                </form>
+            </div>
+        </div>
         <!-- End of Edit Tenant Modal -->
 
         <!-- Rooms Modal -->

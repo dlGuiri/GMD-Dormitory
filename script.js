@@ -254,48 +254,108 @@ async function removeTenant(event) {
 
 
 // Edit Tenant Details
+async function editTenant(event) {
+    event.preventDefault();
 
+    const personId = document.getElementById("personId").value.trim();
+    const contact = document.getElementById("contactId").value.trim();
+    const moveInDate = document.getElementById("moveInDateId").value;
+    const moveOutDate = document.getElementById("moveOutDateId").value;
+
+    if (!personId || !contact || !moveInDate || !moveOutDate) {
+        alert("All fields are required.");
+        return;
+    }
+
+    if (!/^\d{11}$/.test(contact)) {
+        alert("Contact number must be exactly 11 digits.");
+        return;
+    }
+
+    const moveIn = new Date(moveInDate);
+    const moveOut = new Date(moveOutDate);
+    const today = new Date();
+
+    if (moveIn >= moveOut) {
+        alert("Move-out date must be after the move-in date.");
+        return;
+    }
+
+    if (moveIn > today) {
+        alert("Move-in date cannot be in the future.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/edit-tenant/${personId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contact, moveInDate, moveOutDate })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert("Tenant updated successfully.");
+            document.getElementById("editTenantForm").reset();
+            closeModal("editTenantModal"); // Close modal after updating
+        } else {
+            alert(`Error: ${result.error || "Unknown error occurred."}`);
+        }
+    } catch (error) {
+        console.error("Failed to update tenant:", error);
+        alert("Failed to connect to the server. Please try again.");
+    }
+}
 // End of Edit Tenant Details Function
 
 
 // Setup Event Listeners -- para click sa modal, popup ang modal
 document.addEventListener('DOMContentLoaded', () => {
-  // Hide all modals when page loads
-  const modals = document.querySelectorAll('.modal');
-  modals.forEach(modal => modal.style.display = 'none');
-
-  // Modal Buttons
-  const modalButtons = {
-      addTenant: document.querySelector('.buttons button:nth-child(1)'),
-      removeTenant: document.querySelector('.buttons button:nth-child(2)'),
-      rooms: document.querySelector('.buttons button:nth-child(4)')
-  };
-
-  // Event Listeners for Opening Modals
-  modalButtons.addTenant.addEventListener('click', () => openModal('addTenantModal'));
-  modalButtons.removeTenant.addEventListener('click', () => openModal('removeTenantModal'));
-  modalButtons.rooms.addEventListener('click', () => {
-      openModal('roomsModal');
-      updateRoomDropdown(getCurrentApartment()); // Ensure the dropdown updates
+    // Hide all modals when page loads
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => modal.style.display = 'none');
+  
+    // Modal Buttons
+    const modalButtons = {
+        addTenant: document.querySelector('.buttons button:nth-child(1)'),
+        removeTenant: document.querySelector('.buttons button:nth-child(2)'),
+        editTenant: document.querySelector('.buttons button:nth-child(3)'),  // Added Edit Tenant
+        rooms: document.querySelector('.buttons button:nth-child(4)')
+    };
+  
+    // Event Listeners for Opening Modals
+    modalButtons.addTenant.addEventListener('click', () => openModal('addTenantModal'));
+    modalButtons.removeTenant.addEventListener('click', () => openModal('removeTenantModal'));
+    modalButtons.editTenant.addEventListener('click', () => openModal('editTenantModal')); // Added Edit Tenant Event
+    modalButtons.rooms.addEventListener('click', () => {
+        openModal('roomsModal');
+        updateRoomDropdown(getCurrentApartment()); // Ensure the dropdown updates
+    });
+  
+    // Close Modal Buttons
+    const closeButtons = document.querySelectorAll('.close-button');
+    closeButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const modalId = e.target.closest('.modal').id;
+            closeModal(modalId);
+        });
+    });
   });
-
-  // Close Modal Buttons
-  const closeButtons = document.querySelectorAll('.close-button');
-  closeButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
-          const modalId = e.target.closest('.modal').id;
-          closeModal(modalId);
-      });
-  });
-});
-// End of Setup Event Listeners
-
-// Form Submissions
-const addTenantForm = document.getElementById('addTenantForm');
-addTenantForm.addEventListener('submit', addTenant);
-
-const removeTenantForm = document.getElementById('removeTenantForm');
-removeTenantForm.addEventListener('submit', removeTenant);
+  
+  // Form Submissions
+  const addTenantForm = document.getElementById('addTenantForm');
+  addTenantForm.addEventListener('submit', addTenant);
+  
+  const removeTenantForm = document.getElementById('removeTenantForm');
+  removeTenantForm.addEventListener('submit', removeTenant);
+  
+  // Add this if you need to handle edit tenant form submission
+  const editTenantForm = document.getElementById('editTenantForm');
+  if (editTenantForm) {
+      editTenantForm.addEventListener('submit', editTenant); // Add this function in your script
+  }
+  
 
 
 

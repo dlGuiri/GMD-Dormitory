@@ -189,6 +189,62 @@ app.delete('/remove-tenant/:personId', async (req, res) => {
     }
 });
 
+// Edit Tenant Route
+app.put('/edit-tenant/:personId', async (req, res) => {
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const personId = req.params.personId;
+        const { contact, moveInDate, moveOutDate } = req.body;
+
+        // Validate contact number (must be 11 digits)
+        if (!/^\d{11}$/.test(contact)) {
+            return res.status(400).json({ error: "Contact number must be exactly 11 digits." });
+        }
+
+        // Update Person_Information table
+        const [personUpdate] = await connection.query(
+            'UPDATE person_information SET Person_Contact = ? WHERE Person_ID = ?',
+            [contact, personId]
+        );
+
+        // Retrieve the correct Contract_ID for this Person_ID
+        const [contractResult] = await connection.query(
+            'SELECT Contract_ID FROM contract WHERE Person_ID = ?',
+            [personId]
+        );
+
+        if (contractResult.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: "Contract not found for this tenant." });
+        }
+
+        const contractId = contractResult[0].Contract_ID;
+
+        // Update Contract_Details using the retrieved Contract_ID
+        const [contractUpdate] = await connection.query(
+            'UPDATE contract_details SET Actual_Move_In_date = ?, MoveOut_date = ? WHERE Contract_ID = ?',
+            [moveInDate, moveOutDate, contractId]
+        );
+
+        if (personUpdate.affectedRows === 0 || contractUpdate.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: "No changes made or tenant not found." });
+        }
+
+        await connection.commit();
+        res.json({ message: "Tenant updated successfully." });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error(error);
+        res.status(500).json({ error: "Failed to update tenant." });
+    } finally {
+        connection.release();
+    }
+});
 
 
 // 🔹 Start the Server
