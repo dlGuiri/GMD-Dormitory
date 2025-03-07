@@ -157,10 +157,6 @@ app.post('/add-person', async (req, res) => {
     }
 });
 
-
-
-
-
 // Remove Tenant Route
 app.delete('/remove-tenant/:personId', async (req, res) => {
     const connection = await db.getConnection();
@@ -170,47 +166,20 @@ app.delete('/remove-tenant/:personId', async (req, res) => {
 
         const personId = req.params.personId;
 
-        // Find the occupant and room
-        const [occupantResult] = await connection.query(
-            'SELECT o.Occupants_ID, cd.Room_ID FROM occupants o ' +
-            'JOIN contract_details cd ON o.Occupants_ID = cd.Occupants_ID ' +
-            'WHERE o.Person_ID = ?',
-            [personId]
-        );
-
-        if (occupantResult.length === 0) {
-            await connection.rollback();
-            return res.status(404).json({ error: "Tenant not found" });
-        }
-
-        const { Occupants_ID, Room_ID } = occupantResult[0];
-
-        // Remove contract details
-        await connection.query(
-            'DELETE FROM contract_details WHERE Occupants_ID = ?',
-            [Occupants_ID]
-        );
-
-        // Remove occupant
-        await connection.query(
-            'DELETE FROM occupants WHERE Occupants_ID = ?',
-            [Occupants_ID]
-        );
-
-        // Reduce room occupancy
-        await connection.query(
-            'UPDATE room SET Number_of_Renters = Number_of_Renters - 1 WHERE Room_ID = ?',
-            [Room_ID]
-        );
-
-        // Remove person information
-        await connection.query(
+        // Remove person information directly
+        const [result] = await connection.query(
             'DELETE FROM person_information WHERE Person_ID = ?',
             [personId]
         );
 
+        if (result.affectedRows === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: "Tenant not found or cannot be deleted" });
+        }
+
         await connection.commit();
         res.json({ message: "Tenant removed successfully" });
+
     } catch (error) {
         await connection.rollback();
         console.error(error);
@@ -219,6 +188,7 @@ app.delete('/remove-tenant/:personId', async (req, res) => {
         connection.release();
     }
 });
+
 
 
 // 🔹 Start the Server

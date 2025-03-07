@@ -4,7 +4,7 @@ const pool = mysql.createPool({
     host: 'localhost', // or your MySQL server IP
     user: 'root', // or another MySQL user
     password: '',
-    database: 'db_gmd_dormitoryManager', // change on what name is your database
+    database: 'db_dorm3', // change on what name is your database
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
