@@ -196,24 +196,24 @@ app.put('/edit-tenant/:personId', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const personId = req.params.personId;
+        const personIdEdit = req.params.personId;
         const { contact, moveInDate, moveOutDate } = req.body;
-
+        
         // Validate contact number (must be 11 digits)
-        if (!/^\d{11}$/.test(contact)) {
-            return res.status(400).json({ error: "Contact number must be exactly 11 digits." });
-        }
+        // if (!/^\d{11}$/.test(contact)) {
+        //     return res.status(400).json({ error: "Contact number must be exactly 11 digits." });
+        // }
 
         // Update Person_Information table
         const [personUpdate] = await connection.query(
             'UPDATE person_information SET Person_Contact = ? WHERE Person_ID = ?',
-            [contact, personId]
+            [contact, personIdEdit]
         );
 
         // Retrieve the correct Contract_ID for this Person_ID
         const [contractResult] = await connection.query(
-            'SELECT Contract_ID FROM contract WHERE Person_ID = ?',
-            [personId]
+            'SELECT cd.Contract_Details_ID FROM contract_details cd join contract c on cd.contract_details_id = c.contract_id join person_information p on c.person_id = p.person_id WHERE p.person_id = ?',
+            [personIdEdit]
         );
 
         if (contractResult.length === 0) {
@@ -221,11 +221,11 @@ app.put('/edit-tenant/:personId', async (req, res) => {
             return res.status(404).json({ error: "Contract not found for this tenant." });
         }
 
-        const contractId = contractResult[0].Contract_ID;
+        const contractId = contractResult[0].Contract_Details_ID;
 
         // Update Contract_Details using the retrieved Contract_ID
         const [contractUpdate] = await connection.query(
-            'UPDATE contract_details SET Actual_Move_In_date = ?, MoveOut_date = ? WHERE Contract_ID = ?',
+            'UPDATE contract_details SET Actual_Move_In_date = ?, MoveOut_date = ? WHERE Contract_Details_ID = ?',
             [moveInDate, moveOutDate, contractId]
         );
 
@@ -246,6 +246,33 @@ app.put('/edit-tenant/:personId', async (req, res) => {
     }
 });
 
+// Show Edit Tenant Name
+app.get('/get-person-name/:personId', async (req, res) => {
+    const connection = await db.getConnection();
+
+    try {
+        const personId = req.params.personId;
+        console.log(`SERVER PERSON ID: ${personId}`);
+        const [result] = await connection.query(
+            "SELECT CONCAT(Person_FName, ' ', Person_MName, ' ', Person_LName) AS name FROM person_information WHERE Person_ID = ?",
+            [personId]
+        );
+
+        if (result.length > 0) {
+            res.json({ name: result[0].name });
+        } else {
+            res.status(404).json({ error: "Person not found" });
+        }
+
+    } catch (error) {
+        console.error("Error fetching tenant name:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    } finally {
+        connection.release();
+    }
+});
+
+// End of Show Edit Tenant Name
 
 // 🔹 Start the Server
 app.listen(3000, () => {

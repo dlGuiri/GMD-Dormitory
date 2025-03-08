@@ -252,21 +252,57 @@ async function removeTenant(event) {
 }
 // End of Remove a Tenant Function
 
+// Show name for Edit Tenant
+// Async function to fetch tenant name
+async function fetchTenantName(personId) {
+    const nameField = document.getElementById("nameId");
+
+    console.log(`THE PERSON ID: ${personId}`);
+    if (!personId) {
+        nameField.value = ""; // Clear name field if input is empty
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:3000/get-person-name/${personId}`);
+        const data = await response.json();
+
+        if (response.ok && data.name) {
+            nameField.value = data.name; // Display the name
+        } else {
+            nameField.value = "Not Found"; // Show error if no name exists
+        }
+    } catch (error) {
+        console.error("Error fetching tenant name:", error);
+        nameField.value = "Error fetching name";
+    }
+}
+
+// Event listener for input change
+document.getElementById("personIdEdit").addEventListener("change", async function() {
+    await fetchTenantName(this.value);
+});
+// End of Show name for Edit Tenant Function
 
 // Edit Tenant Details
 async function editTenant(event) {
     event.preventDefault();
 
-    const personId = document.getElementById("personId").value.trim();
-    const contact = document.getElementById("contactId").value.trim();
+    const personId = document.getElementById("personIdEdit").value;
+    const contact = document.getElementById("contactId").value;
     const moveInDate = document.getElementById("moveInDateId").value;
     const moveOutDate = document.getElementById("moveOutDateId").value;
 
-    if (!personId || !contact || !moveInDate || !moveOutDate) {
+    if (!personId || isNaN(personId) || !contact || isNaN(contact) || !moveInDate || !moveOutDate) {
         alert("All fields are required.");
         return;
     }
 
+    console.log(`The person id: ${personId}`);
+    console.log(contact);
+    console.log(moveInDate);
+    console.log(moveOutDate);
+    
     if (!/^\d{11}$/.test(contact)) {
         alert("Contact number must be exactly 11 digits.");
         return;
@@ -281,13 +317,13 @@ async function editTenant(event) {
         return;
     }
 
-    if (moveIn > today) {
-        alert("Move-in date cannot be in the future.");
+    if (moveOut <= moveIn) {
+        alert("Move-In date must be before the move-out date.");
         return;
     }
 
-    try {
-        const response = await fetch(`/edit-tenant/${personId}`, {
+    try { 
+        const response = await fetch(`http://localhost:3000/edit-tenant/${personId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ contact, moveInDate, moveOutDate })
